@@ -1,0 +1,38 @@
+body{
+    text-align: center;
+}
+#popup_container{
+    margin: 0 auto;
+    top: 0;
+    width: 100%;
+    z-index: 1000000;
+}
+#popup{
+    margin: 0 auto;
+    background-color: #9f9;
+    color: #072707;
+    font-size: 20px;
+    border: 2px solid green;
+    display: inline-block;
+    padding: 0 10px;
+    font-family: arial sans-serif;
+    z-index: 1000000;
+}
+
+#popup p{
+    margin: 0;
+    margin-top: 16px;
+}
+
+#popup a{
+    font-weight: bold;
+    color: black;
+}
+
+#close{
+    font-size: 12px;
+    float: left;
+    color: gray !important;
+    margin: 0;
+    padding: 0;
+}
