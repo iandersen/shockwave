@@ -24,7 +24,7 @@ function onLoad(){
             closeButton = document.getElementById('close');
             closeButton.onclick = close;
         }
-    }, 5000);
+    }, 2000);
 
 
     function close(e){
