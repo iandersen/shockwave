@@ -12,7 +12,7 @@ function onLoad(){
             console.log(e);
             href = 0;
         }
-        if(!href || !href.includes("https://htmlhigh5.com")){
+        if(!href || (!href.includes("https://htmlhigh5.com") && !href.includes("localhost"))){
             var canvas = document.getElementById("canvas");
             canvas.style.top = '50px';
             var popup = document.getElementById("popup");
@@ -23,6 +23,8 @@ function onLoad(){
             }
             closeButton = document.getElementById('close');
             closeButton.onclick = close;
+            var popupContainer = document.getElementById("popup_container");
+            popupContainer.className += ' visible';
         }
     }, 2000);
 
