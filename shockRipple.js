@@ -6,10 +6,37 @@ var TYPES = {
     button: 1,
     target: 2
 };
+var SCREENS = {
+    menu: 0,
+    levels: 1,
+    game: 2
+};
+var currentScreen = SCREENS.menu;
 var ROOM_SPEED = 30;
+var wasMouseClicked = 0;
 
-loadGrids();
+var TopBarButton = function(text, callback){
+    this.text = text;
+    this.onClick = callback
+};
+
+var Point = function(x,y){
+    this.x = x;
+    this.y = y;
+};
+
+var mousePos = new Point(0,0);
+
+var BUTTONS = [
+    new TopBarButton('\uf021', restartButtonClicked),
+    new TopBarButton('\uf03a', listButtonClicked),
+    new TopBarButton('\uF015', homeButtonClicked)
+];
+
+// window.onload = loadGrids;
+document.fonts.ready.then(loadGrids);
 var activeGrid = null;
+var selectedGrid = null;
 
 function loadGrids() {
     $.getJSON('./grids.json', function(json){
@@ -19,6 +46,11 @@ function loadGrids() {
 }
 
 canvas.addEventListener('click', mouseClicked);
+canvas.addEventListener('mousemove', mouseMoved);
+
+function mouseMoved(event){
+    mousePos = getMousePoint(event);
+}
 
 
 var url = (window.location !== window.parent.location)
@@ -28,21 +60,159 @@ console.log('Being accessed from ', url);
 // $.post('https://htmlhigh5.com/remotePlay', {url: url, game: 'shockripple'});
 
 function start(){
-    initializeGrid(grids[1]);
+    // initializeGrid(grids[7]);
     draw();
 }
 
+function setScreen(screen){
+    currentScreen = screen;
+}
+
 function draw(){
-    if(activeGrid) {
-        var size = Math.min(window.innerHeight, window.innerWidth);
-        canvas.height = size;
-        canvas.width = size;
-        context.height = canvas.height;
-        context.width = canvas.width;
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        drawGrid(activeGrid);
-        setTimeout(draw,1000/ROOM_SPEED);
+    var size = Math.min(window.innerHeight, window.innerWidth);
+    canvas.height = size;
+    canvas.width = size * canvas.height / (canvas.height + getTopBarHeight());
+    context.height = canvas.height;
+    context.width = canvas.width;
+    context.fillStyle = 'black';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    switch(currentScreen){
+        case SCREENS.menu:
+            drawMenu();
+        break;
+        case SCREENS.levels:
+            drawLevels();
+        break;
+        case SCREENS.game:
+            drawTopBar();
+            if(activeGrid)
+                drawGrid();
+        break;
+        default: console.log('Unknown screen: ', currentScreen); break;
     }
+    setTimeout(draw,1000/ROOM_SPEED);
+    if(wasMouseClicked)
+        wasMouseClicked -= 1;
+}
+
+function getTopBarHeight(){
+    if(currentScreen === SCREENS.game)
+        return canvas.height / 15;
+    return 0;
+}
+
+function drawMenu(){
+    var menuGrid = [
+        [0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0]
+    ];
+    if(!selectedGrid)
+        initializeGrid(menuGrid);
+    updateMenuGrid();
+    drawGrid();
+    context.globalAlpha = .7;
+    context.fillStyle = 'black';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.globalAlpha = 1;
+    drawLogo();
+    drawMenuButtons();
+}
+
+var menuColors = [];
+
+function drawLogo(){
+    var menuText = "ShockRipple";
+    var fontSize = Math.round(canvas.width / 10);
+    while(menuColors.length < menuText.length)
+        menuColors.push(randomColor());
+    context.font = fontSize + 'px Arial';
+    context.textBaseline = 'top';
+    context.textAlign = 'left';
+    var totalWidth = context.measureText(menuText).width;
+    var textY = 20;
+    var textX = canvas.width / 2 - totalWidth / 2;
+    for(var i = 0; i < menuText.length; i++){
+        var char = menuText.charAt(i);
+        context.fillStyle = 'white';
+        context.fillText(char,textX, textY);
+        textX += context.measureText(char).width;
+    }
+}
+
+
+var menuRow = 0;
+var menuCol = 0;
+var counter = 0;
+function updateMenuGrid(){
+    if(menuRow < activeGrid.length - 1){
+        menuRow++;
+    }else{
+        menuRow = 0;
+        if(menuCol < activeGrid[menuRow].length - 1){
+            menuCol++;
+        }else{
+            menuCol = 0;
+        }
+    }
+    activeGrid[menuRow][menuCol].clicked = true;
+    counter++;
+    if(counter > 100 || Math.random() < .02){
+        counter = 0;
+        activeGrid[menuCol][menuRow].type = TYPES.button;
+        activeGrid[menuCol][menuRow].startValue = 2 + Math.round(Math.random() * 6);
+        activeGrid[menuCol][menuRow].color = randomColor();
+        activeGrid[menuCol][menuRow].clicked = false;
+        console.log(menuCol, menuRow);
+    }
+}
+
+function drawMenuButtons(){
+
+}
+
+function drawLevels(){
+
+}
+
+function drawTopBar(){
+    context.fillStyle = '#000';
+    context.fillRect(0,0,canvas.width,getTopBarHeight());
+    var fontSize = Math.round(3 * getTopBarHeight() / 4);
+    context.font='900 ' + fontSize + 'px Font Awesome\\ 5 Free';
+    var drawX = canvas.width - 15;
+    var margins = 15;
+    BUTTONS.forEach(function(button, i){
+        context.fillStyle = 'white';
+        context.textBaseline = 'middle';
+        context.textAlign = 'right';
+        var textBounds = context.measureText(button.text);
+        var textX = drawX - margins * i;
+        if(isMouseWithinBounds({width: textBounds.width, height: fontSize, x: textX - textBounds.width, y: getTopBarHeight() /2 - fontSize / 2})) {
+            context.fillStyle = '#999';
+            if(wasMouseClicked){
+                wasMouseClicked = 0;
+                button.onClick();
+            }
+        }
+        context.fillText(button.text, textX, getTopBarHeight() / 2);
+        drawX -= textBounds.width;
+    });
+}
+
+function isMouseWithinBounds(bounds){
+    var m = mousePos;
+    if(m.x >= bounds.x && m.x <= bounds.x + bounds.width)
+        if(m.y >= bounds.y && m.y <= bounds.y + bounds.height)
+            return true;
+    return false;
 }
 
 var GridSquare = function(startValue){
@@ -64,7 +234,6 @@ var GridSquare = function(startValue){
 };
 
 var ShockWave = function(origin, originalPower, cyclesRemaining, color){
-    console.log('cycles remaining: ', cyclesRemaining);
     this.originalPower = originalPower;
     this.origin = origin;
     this.cyclesRemaining = cyclesRemaining;
@@ -88,21 +257,45 @@ function randomColor(){
     return color;
 }
 
-var Point = function(x,y){
-    this.x = x;
-    this.y = y;
-};
+function homeButtonClicked(){
+    setScreen(SCREENS.menu);
+}
+
+function listButtonClicked(){
+    setScreen(SCREENS.levels);
+}
+
+function restartButtonClicked(){
+    initializeGrid(selectedGrid);
+}
 
 function initializeGrid(grid){
+    var newGrid = [];
     for(var i = 0; i < grid.length; i++){
+        newGrid[i] = [];
         for(var n = 0; n < grid[i].length; n++){
-            grid[i][n] = new GridSquare(grid[i][n]);
+            newGrid[i][n] = new GridSquare(grid[i][n]);
         }
     }
-    activeGrid = grid;
+    selectedGrid = grid;
+    activeGrid = newGrid;
 }
 
 function mouseClicked(event){
+    wasMouseClicked = 3;
+    var mousePoint = getMousePoint(event);
+    var mouseX = mousePoint.x;
+    var mouseY = mousePoint.y;
+    if(activeGrid){
+        var squareWidth = Math.min(canvas.height-getTopBarHeight(), canvas.width) / activeGrid.length;
+        var col = Math.floor(mouseX / squareWidth);
+        var row = Math.floor((mouseY-getTopBarHeight()) / squareWidth);
+        if(col >= 0 && row >= 0 && col < activeGrid.length && row < activeGrid[col].length)
+        activeGrid[col][row].clicked = true;
+    }
+}
+
+function getMousePoint(event){
     var pageY = event.pageY;
     var pageX = event.pageX;
     var rect = canvas.getBoundingClientRect();
@@ -110,28 +303,20 @@ function mouseClicked(event){
     var canvasY = rect.top;
     var mouseX = pageX - canvasX;
     var mouseY = pageY - canvasY;
-    if(activeGrid){
-        var squareWidth = Math.floor(Math.min(canvas.height, canvas.width) / activeGrid.length);
-        var col = Math.floor(mouseX / squareWidth);
-        var row = Math.floor(mouseY / squareWidth);
-        activeGrid[col][row].clicked = true;
-    }
+    return new Point(mouseX, mouseY);
 }
 
-function drawGrid(grid){
-    var squareSize = Math.floor(Math.min(canvas.height, canvas.width) / grid.length);
-    var fontSize = squareSize / 2;
+function drawGrid(){
+    var grid = activeGrid;
+    var squareSize = Math.min(canvas.height-getTopBarHeight(), canvas.width) / grid.length;
+    var fontSize = squareSize / 3;
     context.textAlign = "center";
     context.textBaseline = "middle";
-    var leftX = (canvas.width - squareSize * grid.length) / 2;
-    var topY = (canvas.height - squareSize * grid.length) / 2;
-    topY = 0;
-    leftX = 0;
     for(var i = 0; i < grid.length; i++){
         for(var n = 0; n < grid[i].length; n++){
             var square = grid[i][n];
-            var x = leftX + i * squareSize + squareSize / 2;
-            var y = topY + n * squareSize + squareSize / 2;
+            var x = i * squareSize + squareSize / 2;
+            var y = getTopBarHeight() + n * squareSize + squareSize / 2;
             square.shockWaves.forEach(function(wave, index){
                 wave.propagateTime -= 1;
                 wave.cyclesRemaining -= 1;
@@ -175,6 +360,7 @@ function drawGrid(grid){
             });
             switch(square.type){
                 case TYPES.button:
+                    console.log('We have buttons');
                     if(square.clicked){
                         square.clicked = false;
                         square.shockWaves.push(new ShockWave(new Point(i, n), square.startValue,(square.startValue+1) * ROOM_SPEED, square.color));

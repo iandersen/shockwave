@@ -1,5 +1,13 @@
+@import url('https://use.fontawesome.com/releases/v5.0.9/css/all.css');
+
 body{
     margin: 0;
     padding: 0;
     border: 0;
+    background-color: black;
+}
+
+canvas {
+    font-family: 'Font Awesome\ 5 Free';
+    font-weight: 900;
 }
