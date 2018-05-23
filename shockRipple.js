@@ -27,7 +27,7 @@ var Point = function(x,y){
 
 var mousePos = new Point(0,0);
 
-var BUTTONS = [
+var TOP_BAR_BUTTONS = [
     new TopBarButton('\uf021', restartButtonClicked),
     new TopBarButton('\uf03a', listButtonClicked),
     new TopBarButton('\uF015', homeButtonClicked)
@@ -46,6 +46,7 @@ function loadGrids() {
 }
 
 canvas.addEventListener('click', mouseClicked);
+window.addEventListener('keydown', keyPressed);
 canvas.addEventListener('mousemove', mouseMoved);
 
 function mouseMoved(event){
@@ -60,12 +61,16 @@ console.log('Being accessed from ', url);
 // $.post('https://htmlhigh5.com/remotePlay', {url: url, game: 'shockripple'});
 
 function start(){
-    // initializeGrid(grids[7]);
     draw();
 }
 
 function setScreen(screen){
     currentScreen = screen;
+    currentScreen = screen;
+    if(currentScreen === SCREENS.menu)
+        $('#htmlhigh5Box').show();
+    else
+        $('#htmlhigh5Box').hide();
 }
 
 function draw(){
@@ -80,6 +85,10 @@ function draw(){
     switch(currentScreen){
         case SCREENS.menu:
             drawMenu();
+            if(wasMouseClicked) {
+                setScreen(SCREENS.levels);
+                wasMouseClicked = 0;
+            }
         break;
         case SCREENS.levels:
             drawLevels();
@@ -102,23 +111,34 @@ function getTopBarHeight(){
     return 0;
 }
 
+var menuGrid = [
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+];
+
 function drawMenu(){
-    var menuGrid = [
-        [0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0]
-    ];
-    if(!selectedGrid)
+    if(!selectedGrid || selectedGrid.length !== menuGrid.length)
         initializeGrid(menuGrid);
     updateMenuGrid();
     drawGrid();
-    context.globalAlpha = .7;
+    context.globalAlpha = .6;
     context.fillStyle = 'black';
     context.fillRect(0, 0, canvas.width, canvas.height);
     context.globalAlpha = 1;
@@ -137,11 +157,11 @@ function drawLogo(){
     context.textBaseline = 'top';
     context.textAlign = 'left';
     var totalWidth = context.measureText(menuText).width;
-    var textY = 20;
+    var textY = Math.round(canvas.width / 25);
     var textX = canvas.width / 2 - totalWidth / 2;
     for(var i = 0; i < menuText.length; i++){
         var char = menuText.charAt(i);
-        context.fillStyle = 'white';
+        context.fillStyle = '#888';
         context.fillText(char,textX, textY);
         textX += context.measureText(char).width;
     }
@@ -162,24 +182,79 @@ function updateMenuGrid(){
             menuCol = 0;
         }
     }
-    activeGrid[menuRow][menuCol].clicked = true;
     counter++;
-    if(counter > 100 || Math.random() < .02){
-        counter = 0;
-        activeGrid[menuCol][menuRow].type = TYPES.button;
-        activeGrid[menuCol][menuRow].startValue = 2 + Math.round(Math.random() * 6);
-        activeGrid[menuCol][menuRow].color = randomColor();
-        activeGrid[menuCol][menuRow].clicked = false;
-        console.log(menuCol, menuRow);
+    if(activeGrid && activeGrid[menuRow] && activeGrid[menuRow][menuCol]) {
+        activeGrid[menuRow][menuCol].clicked = true;
+        if (counter > 50 || Math.random() < .04) {
+            counter = 0;
+            activeGrid[menuCol][menuRow].type = TYPES.button;
+            activeGrid[menuCol][menuRow].startValue = 2 + Math.round(Math.random() * 6);
+            activeGrid[menuCol][menuRow].color = randomColor();
+            activeGrid[menuCol][menuRow].clicked = false;
+            console.log(menuCol, menuRow);
+        }
     }
 }
 
 function drawMenuButtons(){
-
+    var fontSize = Math.round(canvas.width / 20);
+    context.font = fontSize + 'px Arial';
+    context.textBaseline = 'middle';
+    context.textAlign = 'center';
+    context.fillStyle = 'white';
+    context.fillText('Press Anywhere to Begin!', canvas.width/2, canvas.height/2);
 }
 
+var page = 0;
+var levelMenuColors = [];
 function drawLevels(){
-
+    if(!selectedGrid || selectedGrid.length !== menuGrid.length)
+        initializeGrid(menuGrid);
+    updateMenuGrid();
+    drawGrid();
+    context.globalAlpha = .6;
+    context.fillStyle = 'black';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.globalAlpha = 1;
+    for(var n = 0; n < grids.length; n++){
+        if(!levelMenuColors[n])
+            levelMenuColors[n] = randomColor();
+    }
+    var rows = 5;
+    var cols = 5;
+    var padding = canvas.width / 10;
+    var boxSize = canvas.width / 8;
+    var totalWidth = boxSize * cols;
+    var totalHeight = boxSize * rows;
+    var xMargins = (canvas.width - padding * 2 - totalWidth) / (cols-1);
+    var yMargins = (canvas.height - padding * 2 - totalHeight) / (rows-1);
+    var x = padding;
+    var y = padding;
+    context.textBaseline = 'middle';
+    context.textAlign = 'center';
+    for(var i = page * rows * cols; i < (page+1) * rows * cols && i < grids.length; i++){
+        context.fillStyle = menuColors[i];
+        context.fillRect(x,y,boxSize,boxSize);
+        if(isMouseWithinBounds({x: x, y: y, width: boxSize, height: boxSize})){
+            context.fillStyle = 'black';
+            context.globalAlpha = .8;
+            context.fillRect(x,y,boxSize,boxSize);
+            context.globalAlpha = 1;
+            if(wasMouseClicked){
+                wasMouseClicked = 0;
+                initializeGrid(grids[i]);
+                setScreen(SCREENS.game);
+            }
+        }
+        context.fillStyle = 'white';
+        context.font = Math.round(boxSize/2) +'px Arial';
+        context.fillText(i+1,x+boxSize/2,y+boxSize/2);
+        x += xMargins + boxSize;
+        if(i > 0 && (i+1) % cols === 0){
+            x = padding;
+            y += yMargins + boxSize;
+        }
+    }
 }
 
 function drawTopBar(){
@@ -189,7 +264,7 @@ function drawTopBar(){
     context.font='900 ' + fontSize + 'px Font Awesome\\ 5 Free';
     var drawX = canvas.width - 15;
     var margins = 15;
-    BUTTONS.forEach(function(button, i){
+    TOP_BAR_BUTTONS.forEach(function(button, i){
         context.fillStyle = 'white';
         context.textBaseline = 'middle';
         context.textAlign = 'right';
@@ -293,6 +368,11 @@ function mouseClicked(event){
         if(col >= 0 && row >= 0 && col < activeGrid.length && row < activeGrid[col].length)
         activeGrid[col][row].clicked = true;
     }
+}
+
+function keyPressed(event){
+    if(currentScreen === SCREENS.menu)
+        setScreen(SCREENS.levels);
 }
 
 function getMousePoint(event){

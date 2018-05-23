@@ -11,3 +11,16 @@ canvas {
     font-family: 'Font Awesome\ 5 Free';
     font-weight: 900;
 }
+
+#htmlhigh5Box{
+    position: absolute;
+    text-align: center;
+    bottom: 20px;
+    width: 100%;
+}
+
+#htmlhigh5Image{
+    margin: 0 auto;
+    max-width: 25%;
+    max-height: 33vh;
+}
