@@ -191,7 +191,6 @@ function updateMenuGrid(){
             activeGrid[menuCol][menuRow].startValue = 2 + Math.round(Math.random() * 6);
             activeGrid[menuCol][menuRow].color = randomColor();
             activeGrid[menuCol][menuRow].clicked = false;
-            console.log(menuCol, menuRow);
         }
     }
 }
@@ -206,6 +205,8 @@ function drawMenuButtons(){
 }
 
 var page = 0;
+var levelMenuRows = 4;
+var levelMenuCols = 5;
 var levelMenuColors = [];
 function drawLevels(){
     if(!selectedGrid || selectedGrid.length !== menuGrid.length)
@@ -220,9 +221,9 @@ function drawLevels(){
         if(!levelMenuColors[n])
             levelMenuColors[n] = randomColor();
     }
-    var rows = 5;
-    var cols = 5;
-    var padding = canvas.width / 10;
+    var rows = levelMenuRows;
+    var cols = levelMenuCols;
+    var padding = canvas.width / 8;
     var boxSize = canvas.width / 8;
     var totalWidth = boxSize * cols;
     var totalHeight = boxSize * rows;
@@ -233,7 +234,7 @@ function drawLevels(){
     context.textBaseline = 'middle';
     context.textAlign = 'center';
     for(var i = page * rows * cols; i < (page+1) * rows * cols && i < grids.length; i++){
-        context.fillStyle = menuColors[i];
+        context.fillStyle = levelMenuColors[i];
         context.fillRect(x,y,boxSize,boxSize);
         if(isMouseWithinBounds({x: x, y: y, width: boxSize, height: boxSize})){
             context.fillStyle = 'black';
@@ -254,6 +255,50 @@ function drawLevels(){
             x = padding;
             y += yMargins + boxSize;
         }
+    }
+    drawArrows();
+}
+
+function drawArrows(){
+    var leftArrow = '\uf060';
+    var rightArrow = '\uf061';
+    var color = '#fff';
+    var hoverColor = '#999';
+    var fontSize = Math.round(canvas.width/15);
+    context.font = '900 ' + fontSize+'px Font Awesome\\ 5 Free';
+    context.textAlign = 'left';
+    context.textBaseline = 'bottom';
+    var width = context.measureText(leftArrow).width;
+    var spacing = canvas.width / 10;
+    var bottomPadding = canvas.height / 25;
+    var x,y,mouseOver;
+    if(page > 0){
+        x = canvas.width / 2 - width - spacing / 2;
+        y = canvas.height - bottomPadding;
+        mouseOver = isMouseWithinBounds({x: x, y: canvas.height-bottomPadding-width, width: width, height: width});
+        context.fillStyle = color;
+        if(mouseOver) {
+            context.fillStyle = hoverColor;
+            if(wasMouseClicked){
+                wasMouseClicked = 0;
+                page--;
+            }
+        }
+        context.fillText(leftArrow, x, y);
+    }
+    if(page+1 < grids.length / (levelMenuCols*levelMenuRows)){
+        x = canvas.width / 2 + spacing / 2;
+        y = canvas.height - bottomPadding;
+        mouseOver = isMouseWithinBounds({x: x, y: canvas.height-bottomPadding-width, width: width, height: width});
+        context.fillStyle = color;
+        if(mouseOver) {
+            context.fillStyle = hoverColor;
+            if(wasMouseClicked){
+                wasMouseClicked = 0;
+                page++;
+            }
+        }
+        context.fillText(rightArrow, x, y);
     }
 }
 
@@ -332,6 +377,10 @@ function randomColor(){
     return color;
 }
 
+function resetColors(){
+    availableColors = [];
+}
+
 function homeButtonClicked(){
     setScreen(SCREENS.menu);
 }
@@ -345,6 +394,7 @@ function restartButtonClicked(){
 }
 
 function initializeGrid(grid){
+    resetColors();
     var newGrid = [];
     for(var i = 0; i < grid.length; i++){
         newGrid[i] = [];
@@ -440,7 +490,6 @@ function drawGrid(){
             });
             switch(square.type){
                 case TYPES.button:
-                    console.log('We have buttons');
                     if(square.clicked){
                         square.clicked = false;
                         square.shockWaves.push(new ShockWave(new Point(i, n), square.startValue,(square.startValue+1) * ROOM_SPEED, square.color));
