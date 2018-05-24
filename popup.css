@@ -1,14 +1,16 @@
-body{
+body {
     text-align: center;
 }
-#popup_container{
+
+#popup_container {
     margin: 0 auto;
     top: 0;
     width: 100%;
     z-index: 1000000;
     height: 0;
 }
-#popup{
+
+#popup {
     margin: 0 auto;
     background-color: #9f9;
     color: #072707;
@@ -20,17 +22,17 @@ body{
     z-index: 1000000;
 }
 
-#popup p{
+#popup p {
     margin: 0;
     margin-top: 16px;
 }
 
-#popup a{
+#popup a {
     font-weight: bold;
     color: black;
 }
 
-#close{
+#close {
     font-size: 12px;
     float: left;
     color: gray !important;
@@ -38,6 +40,6 @@ body{
     padding: 0;
 }
 
-.visible{
+.visible {
     height: auto !important;
 }

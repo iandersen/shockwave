@@ -1,6 +1,6 @@
 @import url('https://use.fontawesome.com/releases/v5.0.9/css/all.css');
 
-body{
+body {
     margin: 0;
     padding: 0;
     border: 0;
@@ -12,14 +12,14 @@ canvas {
     font-weight: 900;
 }
 
-#htmlhigh5Box{
+#htmlhigh5Box {
     position: absolute;
     text-align: center;
     bottom: 20px;
     width: 100%;
 }
 
-#htmlhigh5Image{
+#htmlhigh5Image {
     margin: 0 auto;
     max-width: 25%;
     max-height: 33vh;
