@@ -11,6 +11,17 @@ var SCREENS = {
     levels: 1,
     game: 2
 };
+
+var hints = {
+    1: 'Click the square to create a ShockRipple',
+    2: 'A ShockRipple can destroy all targets with the same number',
+    3: 'A ShockRipple will pass through targets with different numbers',
+    4: 'When ShockRipples overlap, their power is multiplied',
+    5: 'ShockRipples cannot pass through buttons that have not been pressed',
+    6: 'A ShockRipple will travel as many squares as its number'
+};
+var currentLevel = -1;
+
 var currentScreen = SCREENS.menu;
 var ROOM_SPEED = 30;
 var wasMouseClicked = 0;
@@ -67,7 +78,8 @@ function start() {
 
 function setScreen(screen) {
     currentScreen = screen;
-    currentScreen = screen;
+    if(screen !== SCREENS.game)
+        currentLevel = -1;
     if (currentScreen === SCREENS.menu)
         $('#htmlhigh5Box').show();
     else
@@ -90,18 +102,19 @@ function draw() {
                 setScreen(SCREENS.levels);
                 wasMouseClicked = 0;
             }
-            break;
+        break;
         case SCREENS.levels:
             drawLevels();
-            break;
+        break;
         case SCREENS.game:
             drawTopBar();
             if (activeGrid)
                 drawGrid();
-            break;
+            drawHint();
+        break;
         default:
             console.log('Unknown screen: ', currentScreen);
-            break;
+        break;
     }
     setTimeout(draw, 1000 / ROOM_SPEED);
     if (wasMouseClicked)
@@ -248,6 +261,7 @@ function drawLevels() {
             context.globalAlpha = 1;
             if (wasMouseClicked) {
                 wasMouseClicked = 0;
+                currentLevel = i+1;
                 initializeGrid(grids[i]);
                 setScreen(SCREENS.game);
             }
@@ -445,6 +459,23 @@ function getMousePoint(event) {
     var mouseX = pageX - canvasX;
     var mouseY = pageY - canvasY;
     return new Point(mouseX, mouseY);
+}
+
+function drawHint(){
+    if(hints[currentLevel]){
+        context.textAlign = 'center';
+        context.textBaseline = 'top';
+        context.font = canvas.width/35+'px Arial';
+        var width = context.measureText(hints[currentLevel]).width;
+        var y = getTopBarHeight() + canvas.height / 50;
+        var margins = 5;
+        context.globalAlpha = .8;
+        context.fillStyle = 'black';
+        context.fillRect(canvas.width/2 - width/2-margins/2, getTopBarHeight(), width+margins/2,canvas.width/16.5);
+        context.globalAlpha = 1;
+        context.fillStyle = '#aaa';
+        context.fillText(hints[currentLevel], canvas.width/2, y);
+    }
 }
 
 function drawGrid() {
