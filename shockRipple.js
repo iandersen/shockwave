@@ -1,6 +1,7 @@
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
 var grids = [];
+var ALL_UNLOCKED = false;
 var TYPES = {
     empty: 0,
     button: 1,
@@ -17,9 +18,12 @@ var hints = {
     2: 'A ShockRipple can destroy all targets with the same number',
     3: 'A ShockRipple will pass through targets with different numbers',
     4: 'When ShockRipples overlap, their power is multiplied',
-    5: 'ShockRipples cannot pass through buttons that have not been pressed',
-    6: 'A ShockRipple will travel as many squares as its number'
+    5: 'A ShockRipple will travel as many squares as its number',
+    6: 'ShockRipples cannot pass through buttons that have not been pressed'
 };
+
+var unlocked = [];
+unlocked[0] = 1;
 var currentLevel = -1;
 
 var currentScreen = SCREENS.menu;
@@ -252,9 +256,12 @@ function drawLevels() {
     context.textBaseline = 'middle';
     context.textAlign = 'center';
     for (var i = page * rows * cols; i < (page + 1) * rows * cols && i < grids.length; i++) {
-        context.fillStyle = levelMenuColors[i];
+        context.fillStyle = '#333';
+        var canClick = unlocked[i] || ALL_UNLOCKED;
+        if(canClick)
+            context.fillStyle = levelMenuColors[i];
         context.fillRect(x, y, boxSize, boxSize);
-        if (isMouseWithinBounds({x: x, y: y, width: boxSize, height: boxSize})) {
+        if (canClick && isMouseWithinBounds({x: x, y: y, width: boxSize, height: boxSize})) {
             context.fillStyle = 'black';
             context.globalAlpha = .8;
             context.fillRect(x, y, boxSize, boxSize);
@@ -484,6 +491,7 @@ function drawGrid() {
     var fontSize = squareSize / 3;
     context.textAlign = 'center';
     context.textBaseline = 'middle';
+    var containsTargets = false;
     for (var i = 0; i < grid.length; i++) {
         for (var n = 0; n < grid[i].length; n++) {
             var square = grid[i][n];
@@ -554,6 +562,7 @@ function drawGrid() {
                     }
                     break;
                 case TYPES.target:
+                    containsTargets = true;
                     context.fillStyle = 'black';
                     context.fillRect(x - squareSize / 2, y - squareSize / 2, squareSize, squareSize);
                     context.fillStyle = 'white';
@@ -581,5 +590,8 @@ function drawGrid() {
             context.strokeStyle = 'white';
             context.strokeRect(x - squareSize / 2, y - squareSize / 2, squareSize, squareSize);
         }
+    }
+    if(!containsTargets && currentLevel !== -1){
+        unlocked[currentLevel] = true;
     }
 }
