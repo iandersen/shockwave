@@ -2,6 +2,11 @@ document.addEventListener('DOMContentLoaded', function (event) {
     onLoad();
 });
 
+var inputDate = new Date("6/14/2018");
+var todaysDate = new Date();
+
+var afterDate = inputDate.setHours(0,0,0,0) >= todaysDate.setHours(0,0,0,0);
+
 function onLoad() {
     setTimeout(function () {
         var topFrame = window.top;
@@ -12,7 +17,7 @@ function onLoad() {
             console.log(e);
             href = 0;
         }
-        if (!href || (!href.includes('https://htmlhigh5.com') && !href.includes('localhost'))) {
+        if (afterDate && (!href || (!href.includes('https://htmlhigh5.com') && !href.includes('localhost')))) {
             var canvas = document.getElementById('canvas');
             canvas.style.top = '50px';
             var popup = document.getElementById('popup');

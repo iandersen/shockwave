@@ -1,7 +1,7 @@
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
 var grids = [];
-var ALL_UNLOCKED = false;
+var ALL_UNLOCKED = true;
 var TYPES = {
     empty: 0,
     button: 1,
@@ -211,7 +211,7 @@ function drawMenu() {
         initializeGrid(menuGrid);
     updateMenuGrid();
     drawGrid();
-    context.globalAlpha = .6;
+    context.globalAlpha = .5;
     context.fillStyle = 'black';
     context.fillRect(0, 0, canvas.width, canvas.height);
     context.globalAlpha = 1;
@@ -230,11 +230,11 @@ function drawLogo() {
     context.textBaseline = 'top';
     context.textAlign = 'left';
     var totalWidth = context.measureText(menuText).width;
-    var textY = Math.round(canvas.width / 25);
+    var textY = Math.round(canvas.width / 6);
     var textX = canvas.width / 2 - totalWidth / 2;
     for (var i = 0; i < menuText.length; i++) {
         var char = menuText.charAt(i);
-        context.fillStyle = '#888';
+        context.fillStyle = '#fff';
         context.fillText(char, textX, textY);
         textX += context.measureText(char).width;
     }
@@ -627,9 +627,20 @@ function drawGrid() {
                     context.fillStyle = square.color;
                     context.fillRect(x - squareSize / 2, y - squareSize / 2, squareSize, squareSize);
                     square.text = square.getShockwaveValue();
+                    var waveLength = (square.text + '').length;
+                    var waveFontSize = fontSize;
+                    if(waveLength > 5){
+                        waveFontSize = 2 * fontSize / 3;
+                    }
+                    if(waveLength > 6){
+                        waveFontSize = fontSize / 2;
+                    }
+                    if(waveLength > 8){
+                        waveFontSize = fontSize / 3;
+                    }
                     if (square.text) {
                         context.fillStyle = 'white';
-                        context.font = fontSize + 'px' + ' Arial';
+                        context.font = waveFontSize + 'px' + ' Arial';
                         context.fillText(square.text, x, y);
                     }
                     break;
@@ -642,7 +653,15 @@ function drawGrid() {
                     context.arc(x, y, squareSize / 2 - 4, 0, 2 * Math.PI);
                     context.fill();
                     context.fillStyle = 'black';
-                    context.font = fontSize + 'px' + ' Arial';
+                    var length = (square.startValue + '').length;
+                    var targetFontSize = fontSize;
+                    if(length > 5){
+                        targetFontSize = 2 * fontSize / 3;
+                    }
+                    if(length > 6){
+                        targetFontSize = fontSize / 2;
+                    }
+                    context.font = targetFontSize + 'px' + ' Arial';
                     context.fillText(square.startValue, x, y);
                     if (square.getShockwaveValue() + square.startValue === 0) {
                         square.type = TYPES.empty;
