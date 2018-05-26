@@ -61,7 +61,7 @@ function loadGrids() {
 }
 
 canvas.addEventListener('click', mouseClicked);
-canvas.addEventListener("touchstart", touchStart, false);
+canvas.addEventListener("touchend", touchStart, false);
 window.addEventListener('keydown', keyPressed);
 canvas.addEventListener('mousemove', mouseMoved);
 
@@ -92,7 +92,7 @@ function setScreen(screen) {
 }
 
 function draw() {
-    var size = Math.min(window.innerHeight, window.innerWidth);
+    var size = Math.min((window.innerHeight > 0) ? window.innerHeight : screen.height, (window.innerWidth > 0) ? window.innerWidth : screen.width);
     canvas.height = size;
     canvas.width = size * canvas.height / (canvas.height + getTopBarHeight());
     context.height = canvas.height;
@@ -291,13 +291,13 @@ function drawArrows() {
     var rightArrow = '\uf061';
     var color = '#fff';
     var hoverColor = '#999';
-    var fontSize = Math.round(canvas.width / 15);
+    var fontSize = Math.round(canvas.width / 12);
     context.font = '900 ' + fontSize + 'px Font Awesome\\ 5 Free';
     context.textAlign = 'left';
     context.textBaseline = 'bottom';
     var width = context.measureText(leftArrow).width;
     var spacing = canvas.width / 10;
-    var bottomPadding = canvas.height / 25;
+    var bottomPadding = canvas.height / 30;
     var x, y, mouseOver;
     if (page > 0) {
         x = canvas.width / 2 - width - spacing / 2;
