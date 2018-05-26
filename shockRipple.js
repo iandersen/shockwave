@@ -1,7 +1,7 @@
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
 var grids = [];
-var ALL_UNLOCKED = false;
+var ALL_UNLOCKED = true;
 var TYPES = {
     empty: 0,
     button: 1,
@@ -61,6 +61,7 @@ function loadGrids() {
 }
 
 canvas.addEventListener('click', mouseClicked);
+canvas.addEventListener("touchstart", touchStart, false);
 window.addEventListener('keydown', keyPressed);
 canvas.addEventListener('mousemove', mouseMoved);
 
@@ -127,7 +128,7 @@ function draw() {
 
 function getTopBarHeight() {
     if (currentScreen === SCREENS.game)
-        return canvas.height / 15;
+        return canvas.height / 11;
     return 0;
 }
 
@@ -334,7 +335,7 @@ function drawTopBar() {
     var fontSize = Math.round(3 * getTopBarHeight() / 4);
     context.font = '900 ' + fontSize + 'px Font Awesome\\ 5 Free';
     var drawX = canvas.width - 15;
-    var margins = 15;
+    var margins = canvas.width / 12;
     TOP_BAR_BUTTONS.forEach(function (button, i) {
         context.fillStyle = 'white';
         context.textBaseline = 'middle';
@@ -394,7 +395,7 @@ var ShockWave = function (origin, originalPower, cyclesRemaining, color) {
 };
 
 
-var allColors = ['maroon', 'red', 'purple', 'fuchsia', 'green', 'lime', 'olive', 'navy', 'blue', 'teal', 'aqua'];
+var allColors = ['maroon', 'red', 'purple', 'fuchsia', 'green', 'lime', 'olive', 'navy', 'blue', 'teal', 'aqua', 'DarkOrange', 'OrangeRed', 'SaddleBrown', 'sienna', 'goldenrod', 'coral', 'DeepPink'];
 var availableColors = [];
 
 function randomColor() {
@@ -438,7 +439,14 @@ function initializeGrid(grid) {
     activeGrid = newGrid;
 }
 
-function mouseClicked(event) {
+var canClickMouse = true;
+
+function touchStart(event){
+    canClickMouse = false;
+    pointInteraction(event);
+}
+
+function pointInteraction(event){
     wasMouseClicked = 3;
     var mousePoint = getMousePoint(event);
     var mouseX = mousePoint.x;
@@ -450,6 +458,11 @@ function mouseClicked(event) {
         if (col >= 0 && row >= 0 && col < activeGrid.length && row < activeGrid[col].length)
             activeGrid[col][row].clicked = true;
     }
+}
+
+function mouseClicked(event) {
+    if(canClickMouse)
+        pointInteraction(event);
 }
 
 function keyPressed(event) {

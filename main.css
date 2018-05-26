@@ -10,6 +10,9 @@ body {
 canvas {
     font-family: 'Font Awesome\ 5 Free';
     font-weight: 900;
+    display: table-cell;
+    vertical-align: center;
+    margin: 0 auto;
 }
 
 #htmlhigh5Box {
@@ -23,4 +26,10 @@ canvas {
     margin: 0 auto;
     max-width: 25%;
     max-height: 33vh;
+}
+
+#container{
+    display: table;
+    text-align: center;
+    width: 100%;
 }
