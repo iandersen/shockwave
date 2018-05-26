@@ -1,7 +1,7 @@
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
 var grids = [];
-var ALL_UNLOCKED = true;
+var ALL_UNLOCKED = false;
 var TYPES = {
     empty: 0,
     button: 1,
@@ -23,12 +23,57 @@ var hints = {
 };
 
 var unlocked = [];
+var cookie = getCookie('google-ads-id');
+var bestLevel = 0;
+var timeStamp = 0;
+
+if(cookie){
+    for(var i = 0; i < 200; i++){
+        if(hashScore(i, i) == cookie){
+            bestLevel = i;
+            for(var n = 0; n < i; n++)
+                unlocked[n] = true;
+            break;
+        }
+    }
+}
 unlocked[0] = 1;
 var currentLevel = -1;
 
 var currentScreen = SCREENS.menu;
 var ROOM_SPEED = 30;
 var wasMouseClicked = 0;
+var dialogY = 0;
+
+function setCookie(name, value, expirationDays) {
+    var d = new Date();
+    d.setTime(d.getTime() + (expirationDays*24*60*60*1000));
+    var expires = "expires="+ d.toUTCString();
+    document.cookie = name + "=" + value + ";" + expires + ";path=/";
+}
+
+function getCookie(name) {
+    name = name + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var ca = decodedCookie.split(';');
+    for(var i = 0; i <ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) === ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) === 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+}
+
+function hashScore(value, salt){
+    var hashedValue = md5(value + md5(salt + md5(value + md5(salt))));
+    for(var i = 0; i < 37; i++)
+        hashedValue = md5(salt + hashedValue);
+    return hashedValue;
+}
 
 var TopBarButton = function (text, callback) {
     this.text = text;
@@ -75,16 +120,23 @@ var url = (window.location !== window.parent.location)
     : document.location.href;
 console.log('Being accessed from ', url);
 
-// $.post('https://htmlhigh5.com/remotePlay', {url: url, game: 'shockripple'});
+$.post('https://htmlhigh5.com/remotePlay', {url: url, game: 'shockripple'});
 
 function start() {
     draw();
 }
-
+var cookieSet = false;
+var levelComplete = false;
 function setScreen(screen) {
     currentScreen = screen;
     if(screen !== SCREENS.game)
         currentLevel = -1;
+    else {
+        cookieSet = false;
+        dialogY = 0;
+        levelComplete = false;
+        $.post('https://htmlhigh5.com/play/shockripple/score/create');
+    }
     if (currentScreen === SCREENS.menu)
         $('#htmlhigh5Box').show();
     else
@@ -415,14 +467,21 @@ function resetColors() {
 }
 
 function homeButtonClicked() {
+    timeStamp = timeStamp + Math.ceil(Math.random() * 5);
+    $.post('https://htmlhigh5.com/play/shockripple/score/store',{timestamp: timeStamp, increment: Math.ceil(currentLevel/2), hash: hashScore(Math.ceil(currentLevel/2), timeStamp)});
     setScreen(SCREENS.menu);
 }
 
 function listButtonClicked() {
+    timeStamp = timeStamp + Math.ceil(Math.random() * 5);
+    $.post('https://htmlhigh5.com/play/shockripple/score/store',{timestamp: timeStamp, increment: Math.ceil(currentLevel/2), hash: hashScore(Math.ceil(currentLevel/2), timeStamp)});
     setScreen(SCREENS.levels);
 }
 
 function restartButtonClicked() {
+    timeStamp = timeStamp + Math.ceil(Math.random() * 5);
+    $.post('https://htmlhigh5.com/play/shockripple/score/store',{timestamp: timeStamp, increment: Math.ceil(currentLevel/2), hash: hashScore(Math.ceil(currentLevel/2), timeStamp)});
+    setScreen(SCREENS.game);
     initializeGrid(selectedGrid);
 }
 
@@ -606,5 +665,43 @@ function drawGrid() {
     }
     if(!containsTargets && currentLevel !== -1){
         unlocked[currentLevel] = true;
+        levelComplete = true;
+        drawNextLevelDialog();
+        if(!cookieSet){
+            cookieSet = true;
+            timeStamp = timeStamp + Math.ceil(Math.random() * 5);
+            $.post('https://htmlhigh5.com/play/shockripple/score/store',{timestamp: timeStamp, increment: currentLevel, hash: hashScore(currentLevel, timeStamp)});
+            if(currentLevel > bestLevel) {
+                setCookie('google-ads-id', hashScore(currentLevel, currentLevel), 365);
+                bestLevel = currentLevel;
+            }
+        }
+    }
+
+    function drawNextLevelDialog(){
+        if(dialogY < canvas.height / 2){
+            dialogY += (canvas.height / 2 - dialogY) / 15;
+        }
+        var fontSize = Math.round(canvas.width / 15);
+        var fontColor = '#fff';
+        var overlayColor = '#000';
+        context.globalAlpha = .75;
+        context.fillStyle = overlayColor;
+        context.fillRect(0,0,canvas.width,canvas.height);
+        context.globalAlpha = 1;
+        context.fillStyle = fontColor;
+        context.font = fontSize+'px Arial';
+        context.textAlign = 'center';
+        context.verticalAlign = 'middle';
+        context.fillText('Level Complete!', canvas.width/2,dialogY);
+        context.font = Math.round(fontSize/2)+'px Arial';
+        context.verticalAlign = 'top';
+        context.fillText('Press anywhere to continue...', canvas.width/2,dialogY + fontSize);
+        if(wasMouseClicked){
+            wasMouseClicked = 0;
+            currentLevel++;
+            initializeGrid(grids[currentLevel-1]);
+            setScreen(SCREENS.game);
+        }
     }
 }
